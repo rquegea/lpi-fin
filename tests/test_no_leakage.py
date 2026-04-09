@@ -32,6 +32,7 @@ from src.features import (
     FEATURE_NAMES,
 )
 from src.target import compute_target
+from src.features_v2 import compute_skew_60d, compute_kurt_60d, compute_vol_autocorr_5d
 
 
 _CFG = {
@@ -200,4 +201,38 @@ def test_features_have_correct_names(toy_df):
     feat = build_features(toy_df, _CFG)
     assert list(feat.columns) == FEATURE_NAMES, (
         f"Expected columns {FEATURE_NAMES}, got {list(feat.columns)}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# No-leakage tests for features_v2 new features (v3)
+# ---------------------------------------------------------------------------
+
+def test_no_leakage_skew_60d(toy_df):
+    """skew_60d at t must not change when t+1 is modified."""
+    t = 100
+    s1 = compute_skew_60d(toy_df)
+    s2 = compute_skew_60d(_modify_future_row(toy_df, t))
+    assert np.isclose(s1.iloc[t], s2.iloc[t], rtol=1e-10), (
+        f"skew_60d at t changed after modifying t+1: {s1.iloc[t]} vs {s2.iloc[t]}"
+    )
+
+
+def test_no_leakage_kurt_60d(toy_df):
+    """kurt_60d at t must not change when t+1 is modified."""
+    t = 100
+    s1 = compute_kurt_60d(toy_df)
+    s2 = compute_kurt_60d(_modify_future_row(toy_df, t))
+    assert np.isclose(s1.iloc[t], s2.iloc[t], rtol=1e-10), (
+        f"kurt_60d at t changed after modifying t+1: {s1.iloc[t]} vs {s2.iloc[t]}"
+    )
+
+
+def test_no_leakage_vol_autocorr_5d(toy_df):
+    """vol_autocorr_5d at t must not change when t+1 is modified."""
+    t = 100
+    s1 = compute_vol_autocorr_5d(toy_df)
+    s2 = compute_vol_autocorr_5d(_modify_future_row(toy_df, t))
+    assert np.isclose(s1.iloc[t], s2.iloc[t], rtol=1e-10), (
+        f"vol_autocorr_5d at t changed after modifying t+1: {s1.iloc[t]} vs {s2.iloc[t]}"
     )

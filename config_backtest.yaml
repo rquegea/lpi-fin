@@ -1,0 +1,27 @@
+# Backtest configuration — Fase 2: straddle economic backtest
+# All parameters documented with rationale and known limitations.
+
+backtest:
+  initial_capital: 100000        # USD — large enough for readable absolute numbers
+  position_size_pct: 0.01        # 1% of current capital per position
+  max_concurrent_positions: 10   # cap concentration; with 30 tickers, ~6 qualify/day
+  hold_days: 5                   # trading days (matches the 5d window in target_v2)
+  top_quintile_pct: 0.20         # trade top 20% by LPI score per day
+  bid_ask_cost_pct: 0.08         # 8% of option premium as spread (conservative estimate)
+  risk_free_rate: 0.0            # simplification; rf ≈ 0 for signal quality assessment
+
+# P&L model per straddle:
+#   cost_iv     = iv_cboe(t) * sqrt(hold_days / 252)
+#   bid_ask     = bid_ask_cost_pct * cost_iv
+#   total_cost  = cost_iv + bid_ask
+#   return_5d   = log(close(t + hold_days) / close(t))
+#   payoff      = |return_5d| - total_cost
+#   pnl_usd     = payoff * position_value
+#   position_value = position_size_pct * capital_at_open
+
+# Known limitations (orient results appropriately):
+#   - VIX/VXN is sector-level IV, not per-ticker IV → UNDERESTIMATES real cost
+#   - No gamma/theta/vega modelling — straddle is held to expiry
+#   - Execution at close price, no slippage beyond the 8% bid-ask estimate
+#   - No leverage or margin — only long straddles (max loss = premium paid)
+#   - bid_ask_cost_pct=0.08 is estimated, not measured from real option chains

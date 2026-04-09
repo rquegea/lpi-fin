@@ -1,0 +1,35 @@
+# Backtest HONESTO — config con costes realistas (Fase 2b)
+#
+# Diferencias vs config_backtest.yaml original:
+#   position_size_pct: 0.01 → 0.05  (5% en lugar de 1%)
+#     Rationale: con 1% las posiciones eran tan pequeñas que std(retornos_diarios)
+#     era artificialmente bajo, inflando el Sharpe mecánicamente.
+#
+#   bid_ask_cost_pct: 0.08 → 0.15  (15% en lugar de 8%)
+#     Rationale: 8% era optimista para opciones de equity individual.
+#     15% refleja spreads reales en ATM straddles con vencimiento corto.
+#
+#   iv_markup: 1.5  (nuevo parámetro)
+#     Rationale: VIX/VXN subestima la IV real de acciones individuales.
+#     Multiplicar la IV por 1.5 simula el coste real de opciones individuales
+#     vs opciones de índice.
+#     cost_iv = iv_cboe(t) * iv_markup * sqrt(hold_days / 252)
+
+backtest:
+  initial_capital: 100000        # USD — igual que original
+  position_size_pct: 0.05        # 5% (vs 1% original) — posiciones más grandes
+  max_concurrent_positions: 10   # igual que original
+  hold_days: 5                   # igual que original (5d ventana target)
+  top_quintile_pct: 0.20         # igual que original (Q5 = top 20%)
+  bid_ask_cost_pct: 0.15         # 15% (vs 8% original) — spreads realistas
+  iv_markup: 1.5                 # nuevo: ajuste de IV individual vs índice
+  risk_free_rate: 0.0            # igual que original
+
+# P&L model (con iv_markup):
+#   cost_iv     = iv_cboe(t) * iv_markup * sqrt(hold_days / 252)
+#   bid_ask     = bid_ask_cost_pct * cost_iv
+#   total_cost  = cost_iv + bid_ask
+#   return_5d   = log(close(t + hold_days) / close(t))
+#   payoff      = |return_5d| - total_cost
+#   pnl_usd     = payoff * position_value
+#   position_value = position_size_pct * capital_at_open
