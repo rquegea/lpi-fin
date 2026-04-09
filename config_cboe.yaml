@@ -1,0 +1,97 @@
+# Config for CBOE IV experiment.
+# Uses market-consensus IV from VIX/VXN instead of rv_30 * 1.04 proxy.
+# Features: iv_rv_spread_cboe, log_range, vol_of_vol, log_dvol (4 features)
+# Target: rv_5_forward > iv_cboe * 1.3
+
+universe:
+  - AAPL
+  - MSFT
+  - GOOGL
+  - AMZN
+  - META
+  - NVDA
+  - TSLA
+  - JPM
+  - V
+  - WMT
+  - JNJ
+  - PG
+  - XOM
+  - CVX
+  - HD
+  - MA
+  - BAC
+  - DIS
+  - ADBE
+  - NFLX
+  - CRM
+  - PFE
+  - KO
+  - PEP
+  - INTC
+  - CSCO
+  - ORCL
+  - MRK
+  - ABT
+  - NKE
+
+fecha_inicio: "2015-01-01"
+fecha_fin: "2024-12-31"
+
+# CBOE index mapping (documented in src/cboe_data.py)
+cboe_symbols:
+  - "^VIX"
+  - "^VXN"
+
+# Active features for this experiment
+active_features:
+  - iv_rv_spread_cboe
+  - log_range
+  - vol_of_vol
+  - log_dvol
+
+# Cross-validation — identical to all previous runs
+n_folds: 5
+embargo_days: 10
+
+# LPI algorithm — identical to all previous runs
+random_state: 42
+k_min: 2
+k_max: 15
+bootstrap_b: 20
+bootstrap_subsample: 5000
+gmm_reg_covar: 1.0e-5
+gmm_max_iter: 300
+
+# Target construction
+target_threshold: 1.3
+rv5_window: 5
+rv30_window: 30  # kept for reference, not used in v2
+
+# Feature windows
+rv20_window: 20
+vol_of_vol_inner: 5
+vol_of_vol_outer: 20
+dvol_short: 5
+dvol_long: 60
+momentum_window: 20  # kept for reference, not used in v2
+
+# Data quality
+min_tickers_pct: 0.833
+min_days_per_ticker: 2000
+
+# Diagnostics
+shuffle_n_permutations: 12
+stability_seeds:
+  - 42
+  - 7
+  - 123
+shuffle_collapse_tolerance: 0.02
+
+# Decision thresholds
+thresholds:
+  no_signal: 0.53
+  marginal: 0.56
+  weak: 0.60
+  moderate: 0.65
+  suspicious_high: 0.72
